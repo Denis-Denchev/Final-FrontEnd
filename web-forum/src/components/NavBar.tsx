@@ -1,60 +1,118 @@
+import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
-  Typography,
   Button,
   IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
   Box,
-  useTheme,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import LogoutIcon from "@mui/icons-material/Logout";
-import LoginIcon from "@mui/icons-material/Login";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
+import HomeIcon from "@mui/icons-material/Home";
+import CategoryIcon from "@mui/icons-material/Category";
 import ForumIcon from "@mui/icons-material/Forum";
-import axios from "axios";
-import { useThemeMode } from "../context/ThemeContext";
+import MessageIcon from "@mui/icons-material/Message";
+import LoginIcon from "@mui/icons-material/Login";
+import LogoutIcon from "@mui/icons-material/Logout";
 
-const NavBar = () => {
+import CreateMessageModal from "./CreateMessageModal";
+
+export default function NavBar() {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const { toggleTheme, logout } = useThemeMode();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"send" | "view">("send");
 
-  const handleLogout = async () => {
-    try {
-      await axios.post("/api/logout");
-      logout();
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+  const token = localStorage.getItem("token");
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const openSendMessage = () => {
+    setModalMode("send");
+    setModalOpen(true);
+    handleCloseMenu();
+  };
+
+  const openViewConversation = () => {
+    setModalMode("view");
+    setModalOpen(true);
+    handleCloseMenu();
+  };
 
   return (
-    <AppBar position="static" color="default" sx={{ mb: 4 }}>
-      <Toolbar>
-        <ForumIcon sx={{ mr: 2 }} />
-        <Typography
-          variant="h6"
-          component="div"
-          sx={{ flexGrow: 1, cursor: "pointer" }}
-          onClick={() => navigate("/")}
-        >
-          Alpha Panda Forum
-        </Typography>
+    <>
+      <AppBar position="static">
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <IconButton
+              component={RouterLink}
+              to="/"
+              color="inherit"
+              size="large"
+            >
+              <HomeIcon />
+            </IconButton>
 
-        <IconButton onClick={toggleTheme} color="inherit">
-          {theme.palette.mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
-        </IconButton>
+            <Button
+              component={RouterLink}
+              to="/categories"
+              color="inherit"
+              startIcon={<CategoryIcon />}
+            >
+              Categories
+            </Button>
 
-        <Box>
-          {isLoggedIn ? (
-            <>
-              <Button color="inherit" onClick={() => navigate("/categories")}>
-                Categories
+            <Button
+              component={RouterLink}
+              to="/topics"
+              color="inherit"
+              startIcon={<ForumIcon />}
+            >
+              Topics
+            </Button>
+
+            <Tooltip title="Messages">
+              <IconButton color="inherit" onClick={handleOpenMenu}>
+                <MessageIcon />
+              </IconButton>
+            </Tooltip>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleCloseMenu}
+            >
+              <MenuItem onClick={openSendMessage}>Send Message</MenuItem>
+              <MenuItem onClick={openViewConversation}>
+                View Conversation
+              </MenuItem>
+            </Menu>
+          </Box>
+
+          <Box>
+            {!token ? (
+              <Button
+                component={RouterLink}
+                to="/login"
+                color="inherit"
+                startIcon={<LoginIcon />}
+              >
+                Login
               </Button>
+            ) : (
               <Button
                 color="inherit"
                 startIcon={<LogoutIcon />}
@@ -62,20 +120,16 @@ const NavBar = () => {
               >
                 Logout
               </Button>
-            </>
-          ) : (
-            <Button
-              color="inherit"
-              startIcon={<LoginIcon />}
-              onClick={() => navigate("/login")}
-            >
-              Login
-            </Button>
-          )}
-        </Box>
-      </Toolbar>
-    </AppBar>
-  );
-};
+            )}
+          </Box>
+        </Toolbar>
+      </AppBar>
 
-export default NavBar;
+      <CreateMessageModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        mode={modalMode}
+      />
+    </>
+  );
+}

@@ -9,20 +9,31 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  mode: "send" | "view"; // 👈 добавено
 }
 
-export default function CreateMessageModal({ open, onClose }: Props) {
+export default function CreateMessageModal({ open, onClose, mode }: Props) {
   const [content, setContent] = useState("");
   const [receiverUsername, setReceiverUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleSendMessage = async () => {
+  const handleSubmit = async () => {
     const token = localStorage.getItem("token");
-    if (!token || !content.trim() || !receiverUsername.trim()) return;
+    if (!token || !receiverUsername.trim()) return;
+
+    if (mode === "view") {
+      onClose();
+      navigate(`/messages/with/${receiverUsername.trim()}`);
+      return;
+    }
+
+    if (!content.trim()) return;
 
     try {
       setLoading(true);
@@ -40,7 +51,7 @@ export default function CreateMessageModal({ open, onClose }: Props) {
       );
       setContent("");
       setReceiverUsername("");
-      onClose(); // close modal
+      onClose();
     } catch (err) {
       console.error("❌ Error sending message:", err);
     } finally {
@@ -50,26 +61,30 @@ export default function CreateMessageModal({ open, onClose }: Props) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>Send a Message</DialogTitle>
+      <DialogTitle>
+        {mode === "send" ? "Send a Message" : "View Conversation"}
+      </DialogTitle>
       <DialogContent>
         <TextField
-          label="To (username)"
+          label="Username"
           fullWidth
           variant="outlined"
           margin="normal"
           value={receiverUsername}
           onChange={(e) => setReceiverUsername(e.target.value)}
         />
-        <TextField
-          label="Message"
-          fullWidth
-          multiline
-          minRows={3}
-          variant="outlined"
-          margin="normal"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
+        {mode === "send" && (
+          <TextField
+            label="Message"
+            fullWidth
+            multiline
+            minRows={3}
+            variant="outlined"
+            margin="normal"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
@@ -77,10 +92,16 @@ export default function CreateMessageModal({ open, onClose }: Props) {
         </Button>
         <Button
           variant="contained"
-          onClick={handleSendMessage}
-          disabled={loading || !content || !receiverUsername}
+          onClick={handleSubmit}
+          disabled={
+            loading || !receiverUsername || (mode === "send" && !content)
+          }
         >
-          {loading ? "Sending..." : "Send"}
+          {mode === "send"
+            ? loading
+              ? "Sending..."
+              : "Send"
+            : "View Conversation"}
         </Button>
       </DialogActions>
     </Dialog>
