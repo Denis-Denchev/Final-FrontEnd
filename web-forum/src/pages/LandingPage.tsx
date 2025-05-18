@@ -1,11 +1,9 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  AppBar,
   Box,
   Button,
   CssBaseline,
-  Toolbar,
   Typography,
   useTheme,
   Link,
@@ -162,6 +160,88 @@ export default function LandingPage() {
             ))}
           </Box>
         </Box>
+      </Box>
+
+      {/* Footer */}
+      <Box
+        component="footer"
+        sx={{
+          py: 6,
+          px: 2,
+          backgroundColor: theme.palette.mode === 'dark' ? '#0f172a' : '#f1f5f9',
+          color: theme.palette.text.primary,
+        }}
+      >
+        <Box
+          sx={{
+            maxWidth: 1200,
+            mx: 'auto',
+            display: 'grid',
+            gridTemplateColumns: isSmall ? '1fr' : 'repeat(4, 1fr)',
+            gap: 4,
+          }}
+        >
+          {/* About */}
+          <Box>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>Alpha Panda</Typography>
+            <Typography variant="body2">
+              A community forum for passionate discussions and knowledge sharing.
+            </Typography>
+          </Box>
+
+          {/* Quick Links */}
+          <Box>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>Quick Links</Typography>
+            <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+              {['Home', 'Categories', 'About', 'Contact'].map((text, i) => (
+                <li key={i}>
+                  <Link component={RouterLink} to={text === 'Home' ? '/' : `/${text.toLowerCase()}`}
+                    underline="hover" color="inherit">
+                    {text}
+                  </Link>
+                </li>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Legal */}
+          <Box>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>Legal</Typography>
+            <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+              {['Privacy Policy', 'Terms of Service', 'Community Guidelines'].map((text, i) => (
+                <li key={i}>
+                  <Link component={RouterLink} to={`/${text.toLowerCase().replace(/\s/g, '-')}`}
+                    underline="hover" color="inherit">
+                    {text}
+                  </Link>
+                </li>
+              ))}
+            </Box>
+          </Box>
+
+          {/* Social */}
+          <Box>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>Connect With Us</Typography>
+            <Box sx={{ display: 'flex', gap: 2, mt: 1 }}>
+              <Link href="https://www.facebook.com/profile.php?id=61576293721896" target="_blank" rel="noopener noreferrer">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/facebook/facebook-original.svg" width="24" />
+              </Link>
+              <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/twitter/twitter-original.svg" width="24" />
+              </Link>
+              <Link href="https://discord.com" target="_blank" rel="noopener noreferrer">
+                <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/discordjs/discordjs-original.svg" width="24" />
+              </Link>
+            </Box>
+          </Box>
+        </Box>
+
+        <Typography
+          variant="caption"
+          sx={{ mt: 4, display: 'block', textAlign: 'center', opacity: 0.6 }}
+        >
+          © {new Date().getFullYear()} Alpha Panda Forum. All rights reserved.
+        </Typography>
       </Box>
     </>
   );
