@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, ChangeEvent } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import {
@@ -36,6 +36,7 @@ export default function ConversationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [newMessage, setNewMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
   const theme = useTheme();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentUser = localStorage.getItem("username");
@@ -100,6 +101,54 @@ export default function ConversationPage() {
       .join("")
       .slice(0, 2);
 
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setUploading(true);
+
+    try {
+      const response = await axios.post(
+        "https://db-api.alpha-panda.eu/api/v1/messages/upload-image",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Получаваме URL на качената снимка
+      const imageUrl = response.data.url;
+      // Изпращаме съобщение със съдържание URL-то на снимката
+      await axios.post(
+        "https://db-api.alpha-panda.eu/api/v1/messages/",
+        {
+          receiver_username: username,
+          content: imageUrl,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setNewMessage("");
+      fetchMessages();
+    } catch (err) {
+      console.error("Failed to upload or send image", err);
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
   useEffect(() => {
     fetchMessages();
     const interval = setInterval(() => {
@@ -137,6 +186,15 @@ export default function ConversationPage() {
           {messages.map((msg) => {
             const isSender = msg.sender_username === currentUser;
             const initials = getInitials(msg.sender_username);
+            // Проверка дали съдържанието е URL на изображение (примерна простичка проверка)
+            const isImage =
+              msg.content.startsWith("http") &&
+              (msg.content.endsWith(".jpg") ||
+                msg.content.endsWith(".jpeg") ||
+                msg.content.endsWith(".png") ||
+                msg.content.endsWith(".gif") ||
+                msg.content.includes("base64"));
+
             return (
               <Box
                 key={msg.id}
@@ -167,11 +225,23 @@ export default function ConversationPage() {
                       color: "#000",
                       boxShadow: 2,
                       wordBreak: "break-word",
+                      maxWidth: "100%",
                     }}
                   >
-                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
-                      {msg.content}
-                    </Typography>
+                    {isImage ? (
+                      <img
+                        src={msg.content}
+                        alt="Sent image"
+                        style={{ maxWidth: "100%", borderRadius: "15px" }}
+                      />
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        sx={{ whiteSpace: "pre-wrap" }}
+                      >
+                        {msg.content}
+                      </Typography>
+                    )}
                     <Typography
                       variant="caption"
                       sx={{
@@ -192,7 +262,7 @@ export default function ConversationPage() {
       </Box>
 
       {/* Message Input */}
-      <Box display="flex" gap={1}>
+      <Box display="flex" gap={1} alignItems="center">
         <TextField
           fullWidth
           multiline
@@ -208,13 +278,25 @@ export default function ConversationPage() {
               color: theme.palette.mode === "dark" ? "#fff" : "#000",
             },
           }}
+          disabled={uploading}
         />
         <Button
           variant="contained"
           onClick={handleSend}
-          disabled={!newMessage.trim()}
+          disabled={!newMessage.trim() || uploading}
         >
           Send
+        </Button>
+
+        {/* Бутон за качване на снимка */}
+        <Button variant="outlined" component="label" disabled={uploading}>
+          {uploading ? "Uploading..." : "Upload Image"}
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={handleFileChange}
+          />
         </Button>
       </Box>
     </Box>
