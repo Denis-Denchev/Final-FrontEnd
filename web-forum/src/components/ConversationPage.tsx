@@ -14,6 +14,14 @@ import {
   Avatar,
 } from "@mui/material";
 
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+// Activate the plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 interface Message {
   id: number;
   sender_username: string;
@@ -82,14 +90,7 @@ export default function ConversationPage() {
   };
 
   const formatDateTime = (iso: string) => {
-    const date = new Date(iso);
-    return date.toLocaleString("bg-BG", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return dayjs.utc(iso).tz("Europe/Sofia").format("DD MMMM YYYY, HH:mm");
   };
 
   const getInitials = (name: string) =>
@@ -101,11 +102,9 @@ export default function ConversationPage() {
 
   useEffect(() => {
     fetchMessages();
-
     const interval = setInterval(() => {
       fetchMessages();
     }, 3000);
-
     return () => clearInterval(interval);
   }, [username]);
 
