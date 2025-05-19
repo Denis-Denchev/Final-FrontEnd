@@ -101,6 +101,12 @@ export default function ConversationPage() {
 
   useEffect(() => {
     fetchMessages();
+
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, [username]);
 
   useEffect(() => {
@@ -132,50 +138,52 @@ export default function ConversationPage() {
           {messages.map((msg) => {
             const isSender = msg.sender_username === currentUser;
             const initials = getInitials(msg.sender_username);
-
             return (
               <Box
                 key={msg.id}
                 display="flex"
                 justifyContent={isSender ? "flex-end" : "flex-start"}
-                sx={{ mb: 1 }}
+                alignItems="flex-end"
               >
                 <Box
                   display="flex"
                   flexDirection={isSender ? "row-reverse" : "row"}
                   alignItems="flex-end"
-                  sx={{
-                    maxWidth: "70%",
-                    bgcolor: isSender ? "#d0e8ff" : "#d6f5d6",
-                    borderRadius: "20px",
-                    p: 1.5,
-                    boxShadow: 2,
-                    color: "#000",
-                    wordBreak: "break-word",
-                  }}
+                  sx={{ maxWidth: "75%" }}
                 >
                   <Avatar
                     sx={{
                       bgcolor: isSender ? "#42a5f5" : "#8bc34a",
-                      ml: isSender ? 1 : 0,
-                      mr: isSender ? 0 : 1,
+                      mx: 1,
                       fontSize: "0.875rem",
                     }}
                   >
                     {initials}
                   </Avatar>
-
-                  <Box>
+                  <Paper
+                    sx={{
+                      p: 1.5,
+                      borderRadius: "20px",
+                      bgcolor: isSender ? "#d0e8ff" : "#d6f5d6",
+                      color: "#000",
+                      boxShadow: 2,
+                      wordBreak: "break-word",
+                    }}
+                  >
                     <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
                       {msg.content}
                     </Typography>
                     <Typography
                       variant="caption"
-                      sx={{ display: "block", mt: 0.5, textAlign: isSender ? "right" : "left" }}
+                      sx={{
+                        display: "block",
+                        mt: 0.5,
+                        textAlign: isSender ? "right" : "left",
+                      }}
                     >
                       {formatDateTime(msg.created_at)}
                     </Typography>
-                  </Box>
+                  </Paper>
                 </Box>
               </Box>
             );
