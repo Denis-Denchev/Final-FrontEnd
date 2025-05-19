@@ -12,6 +12,7 @@ import {
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import HomeIcon from "@mui/icons-material/Home";
 import CategoryIcon from "@mui/icons-material/Category";
+import ForumIcon from "@mui/icons-material/Forum";
 import MessageIcon from "@mui/icons-material/Message";
 import LoginIcon from "@mui/icons-material/Login";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -72,6 +73,15 @@ export default function NavBar() {
               startIcon={<CategoryIcon />}
             >
               Categories
+            </Button>
+
+            <Button
+              component={RouterLink}
+              to="/topics"
+              color="inherit"
+              startIcon={<ForumIcon />}
+            >
+              Topics
             </Button>
 
             <Tooltip title="Messages">
